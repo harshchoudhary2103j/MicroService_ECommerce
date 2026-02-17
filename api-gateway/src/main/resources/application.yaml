@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+
+
+            - id: inventory-service
+              uri: lb://INVENTORYSERVICE
+              predicates:
+                - Path=/inventory/**
+
+
+
+            - id: order-service
+              uri: lb://ORDERSERVICE
+              predicates:
+                - Path=/orders/**
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+  instance:
+    prefer-ip-address: true

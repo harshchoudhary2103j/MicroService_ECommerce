@@ -1,5 +1,7 @@
 package com.harsh.ecommerce.InventoryService.service;
 
+import com.harsh.ecommerce.InventoryService.dto.OrderRequestDto;
+import com.harsh.ecommerce.InventoryService.dto.OrderRequestItemDto;
 import com.harsh.ecommerce.InventoryService.dto.ProductDto;
 import com.harsh.ecommerce.InventoryService.entity.Product;
 import com.harsh.ecommerce.InventoryService.repository.ProductRepository;
@@ -7,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,4 +39,21 @@ public class ProductService {
         );
     }
 
+    @Transactional
+    public Double reduceStocks(OrderRequestDto orderRequestDto) {
+        log.info("Reducing stocks");
+        Double totalPrcie = 0.0;
+        for(OrderRequestItemDto orderItemDto: orderRequestDto.getItems()){
+            Long productId = orderItemDto.getProductId();
+            Integer quantity = orderItemDto.getQuantity();
+            Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+            if(product.getStock() < quantity){
+                throw new RuntimeException("Insufficient stocks");
+            }
+            product.setStock(product.getStock()-quantity);
+            productRepository.save(product);
+            totalPrcie = totalPrcie + (product.getPrice()*quantity);
+        }
+        return totalPrcie;
+    }
 }
