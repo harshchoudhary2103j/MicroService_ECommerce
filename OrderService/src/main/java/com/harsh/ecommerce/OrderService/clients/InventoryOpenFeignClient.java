@@ -9,4 +9,9 @@ public interface InventoryOpenFeignClient {
 
     @PutMapping("/inventory/products/reduce-stocks")
     Double reduceStocks(OrderRequestDto orderRequestDto);
+
+    //cancel order
+    @PutMapping("inventory/products/refuel-stocks")
+    void refuelStocks(OrderRequestDto orderRequestDto);
+
 }

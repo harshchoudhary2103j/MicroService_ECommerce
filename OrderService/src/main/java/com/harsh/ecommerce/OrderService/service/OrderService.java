@@ -1,6 +1,7 @@
 package com.harsh.ecommerce.OrderService.service;
 
 import com.harsh.ecommerce.OrderService.clients.InventoryOpenFeignClient;
+import com.harsh.ecommerce.OrderService.clients.ShippingOpenFeignClient;
 import com.harsh.ecommerce.OrderService.dto.OrderRequestDto;
 import com.harsh.ecommerce.OrderService.entity.OrderItem;
 import com.harsh.ecommerce.OrderService.entity.OrderStatus;
@@ -11,6 +12,7 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ModelMapper modelMapper;
     private final InventoryOpenFeignClient inventoryOpenFeignClient;
+    private final ShippingOpenFeignClient shippingOpenFeignClient;
 
     public List<OrderRequestDto> getAllOrders() {
         log.info("Fetching all orders");
@@ -57,4 +60,54 @@ public class OrderService {
         log.error("Error while creating order: {}", throwable.getMessage());
         return new OrderRequestDto();
     }
+
+    public OrderRequestDto cancelOrder(Long orderId){
+
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if(order.getOrderStatus() == OrderStatus.CANCELLED){
+            throw new RuntimeException("Order already cancelled");
+        }
+
+        // map Order -> OrderRequestDto
+        OrderRequestDto dto = modelMapper.map(order, OrderRequestDto.class);
+
+        // call inventory service to restore stock
+        inventoryOpenFeignClient.refuelStocks(dto);
+
+        // update order status
+        order.setOrderStatus(OrderStatus.CANCELLED);
+
+        Orders updated = orderRepository.save(order);
+
+        return modelMapper.map(updated, OrderRequestDto.class);
+    }
+
+    public OrderRequestDto shipOrder(Long orderId){
+
+        Orders order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if(order.getOrderStatus() == OrderStatus.CANCELLED){
+            throw new RuntimeException("Cannot ship cancelled order");
+        }
+
+        if(order.getOrderStatus() == OrderStatus.SHIPPED){
+            throw new RuntimeException("Order already shipped");
+        }
+
+        // call shipping service
+        shippingOpenFeignClient.confirmShipping(
+                modelMapper.map(order, OrderRequestDto.class)
+        );
+
+        // update status
+        order.setOrderStatus(OrderStatus.SHIPPED);
+
+        Orders updated = orderRepository.save(order);
+
+        return modelMapper.map(updated, OrderRequestDto.class);
+    }
+
 }

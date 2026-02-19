@@ -56,4 +56,17 @@ public class ProductService {
         }
         return totalPrcie;
     }
+    @Transactional
+    public void refuelStocks(OrderRequestDto orderRequestDto){
+
+        for(OrderRequestItemDto item : orderRequestDto.getItems()){
+
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            product.setStock(product.getStock() + item.getQuantity());
+
+            productRepository.save(product);
+        }
+    }
 }

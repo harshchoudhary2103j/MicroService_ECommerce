@@ -45,4 +45,15 @@ public class OrderController {
         return ResponseEntity.ok(order);  // Returns 200 OK with the order
     }
 
+    @PutMapping("/cancel/{id}")
+    public ResponseEntity<OrderRequestDto> cancelOrder(@PathVariable Long id){
+        return ResponseEntity.ok(orderService.cancelOrder(id));
+    }
+
+    @PostMapping("/ship/{id}")
+    public ResponseEntity<OrderRequestDto> shipOrder(@PathVariable Long id){
+        return ResponseEntity.ok(orderService.shipOrder(id));
+    }
+
+
 }
