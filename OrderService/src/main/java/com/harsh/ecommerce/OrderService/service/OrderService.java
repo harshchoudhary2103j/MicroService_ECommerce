@@ -6,6 +6,9 @@ import com.harsh.ecommerce.OrderService.entity.OrderItem;
 import com.harsh.ecommerce.OrderService.entity.OrderStatus;
 import com.harsh.ecommerce.OrderService.entity.Orders;
 import com.harsh.ecommerce.OrderService.repository.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -33,6 +36,9 @@ public class OrderService {
         return modelMapper.map(order, OrderRequestDto.class);
     }
 
+//    @Retry(name = "inventoryRetry", fallbackMethod = "createOrderFallback")
+//    @RateLimiter(name = "inventoryRateLimiter", fallbackMethod = "createOrderFallback")
+    @CircuitBreaker(name = "inventoryCircuitBreaker", fallbackMethod = "createOrderFallback")
     public OrderRequestDto createOrder(OrderRequestDto orderRequestDto) {
 
         Double totalPrice = inventoryOpenFeignClient.reduceStocks(orderRequestDto);
@@ -45,5 +51,10 @@ public class OrderService {
        Orders savedOrder =  orderRepository.save(order);
         return modelMapper.map(savedOrder, OrderRequestDto.class);
 
+    }
+
+    public OrderRequestDto createOrderFallback(OrderRequestDto orderRequestDto, Throwable throwable) {
+        log.error("Error while creating order: {}", throwable.getMessage());
+        return new OrderRequestDto();
     }
 }

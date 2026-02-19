@@ -1,4 +1,4 @@
-INSERT INTO product (title, price, quantity) VALUES
+INSERT INTO product (name, price, stock) VALUES
 ('iPhone 15 Pro Max', 1399.00, 10),
 ('Samsung Galaxy S23 Ultra', 1199.00, 12),
 ('OnePlus 12 5G', 799.00, 15),

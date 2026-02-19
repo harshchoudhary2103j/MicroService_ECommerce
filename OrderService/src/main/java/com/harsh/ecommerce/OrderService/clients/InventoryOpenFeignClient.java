@@ -4,9 +4,9 @@ import com.harsh.ecommerce.OrderService.dto.OrderRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PutMapping;
 
-@FeignClient(value = "InventoryService",name = "/inventory")
+@FeignClient(value = "InventoryService")
 public interface InventoryOpenFeignClient {
 
-    @PutMapping("/products/reduce-stocks")
+    @PutMapping("/inventory/products/reduce-stocks")
     Double reduceStocks(OrderRequestDto orderRequestDto);
 }
