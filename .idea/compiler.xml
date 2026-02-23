@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
+        <module name="config-server" />
         <module name="discovery-service" />
       </profile>
       <profile name="Annotation profile for ShippingService" enabled="true">
@@ -29,6 +30,7 @@
       <module name="OrderService" options="-parameters" />
       <module name="ShippingService" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
+      <module name="config-server" options="-parameters" />
       <module name="discovery-service" options="-parameters" />
     </option>
   </component>
